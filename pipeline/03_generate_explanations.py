@@ -216,11 +216,8 @@ for idx, row in predictions_raw.iterrows():
     # Get top drivers based on SHAP values
     pos_drivers, neg_drivers = get_top_shap_drivers(scoring_idx)
     
-    # Generate explanation
-    if GENERATE_EXPLANATIONS:
-        explanation = generate_llm_explanation(company_name, prob, risk_rating, pos_drivers, neg_drivers, desc)
-    else:
-        explanation = ""
+    # Generate explanation (falls back to local template if API keys are missing)
+    explanation = generate_llm_explanation(company_name, prob, risk_rating, pos_drivers, neg_drivers, desc)
     
     final_rows.append({
         "company_id": company_id,
