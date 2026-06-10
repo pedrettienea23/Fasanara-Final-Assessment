@@ -11,18 +11,12 @@
 # 5. Saves the final processed datasets.
 # 
 
-# In[1]:
-
-
 import pandas as pd
 import numpy as np
 import re
 import os
 
 print("Imports completed successfully.")
-
-
-# In[2]:
 
 
 # Define paths
@@ -45,16 +39,10 @@ print(f"train_outcomes shape: {train_outcomes.shape}")
 print(f"scoring_companies shape: {scoring_companies.shape}")
 
 
-# In[3]:
-
-
 # Merge training files
 df_train = train_companies.merge(train_outcomes, on="company_id").merge(train_narratives, on="company_id")
 print(f"Merged training dataset shape: {df_train.shape}")
 df_train.head()
-
-
-# In[4]:
 
 
 # Exact textual phrases verified in the dataset
@@ -112,9 +100,6 @@ print("NLP Feature extraction complete.")
 print(f"df_train columns: {df_train.shape[1]}, df_score columns: {df_score.shape[1]}")
 
 
-# In[5]:
-
-
 def engineer_financial_interactions(df):
     df = df.copy()
 
@@ -149,9 +134,6 @@ print("Financial interactions engineered.")
 print(f"df_train columns: {df_train.shape[1]}, df_score columns: {df_score.shape[1]}")
 
 
-# In[6]:
-
-
 # Drop irrelevant columns (company_name and raw business_description) to avoid leakage/schema mismatch
 drop_cols = ["company_name", "business_description"]
 df_train_dropped = df_train.drop(columns=drop_cols)
@@ -183,9 +165,6 @@ scoring_processed = X_score_encoded.copy()
 print(f"Processed training set shape: {train_processed.shape}")
 print(f"Processed scoring set shape: {scoring_processed.shape}")
 assert list(train_processed.drop(columns=['defaulted']).columns) == list(scoring_processed.columns), "Columns do not align!"
-
-
-# In[7]:
 
 
 # Save datasets
