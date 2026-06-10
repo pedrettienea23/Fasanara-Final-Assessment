@@ -20,34 +20,36 @@ st.markdown("""
 <style>
     /* Main Background & Fonts */
     .stApp {
-        background-color: #0f172a;
-        color: #f1f5f9;
+        background-color: #000000;
+        color: #e0e0e0;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
     }
     
     /* Header styling */
     h1, h2, h3 {
-        color: #38bdf8 !important;
-        font-family: 'Outfit', sans-serif;
+        color: #ffffff !important;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        font-weight: 600;
     }
     
     /* Metric Cards */
     .metric-card {
-        background: rgba(30, 41, 59, 0.7);
-        border: 1px solid rgba(56, 189, 248, 0.2);
+        background: #121212;
+        border: 1px solid #333333;
         padding: 20px;
-        border-radius: 12px;
+        border-radius: 8px;
         text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
     }
     .metric-value {
         font-size: 2.2rem;
         font-weight: 700;
-        color: #38bdf8;
+        color: #e0e0e0;
         margin-bottom: 5px;
     }
     .metric-label {
         font-size: 0.9rem;
-        color: #94a3b8;
+        color: #8a8a8a;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
@@ -55,31 +57,36 @@ st.markdown("""
     /* Risk Rating Badges */
     .badge {
         padding: 5px 12px;
-        border-radius: 9999px;
+        border-radius: 4px;
         font-weight: 600;
         font-size: 0.85rem;
         display: inline-block;
     }
     .badge-high {
-        background-color: rgba(239, 68, 68, 0.2);
-        color: #ef4444;
-        border: 1px solid rgba(239, 68, 68, 0.5);
+        background-color: rgba(211, 47, 47, 0.15);
+        color: #ff5252;
+        border: 1px solid rgba(211, 47, 47, 0.4);
     }
     .badge-medium {
-        background-color: rgba(245, 158, 11, 0.2);
-        color: #f59e0b;
-        border: 1px solid rgba(245, 158, 11, 0.5);
+        background-color: rgba(245, 124, 0, 0.15);
+        color: #ffb74d;
+        border: 1px solid rgba(245, 124, 0, 0.4);
     }
     .badge-low {
-        background-color: rgba(16, 185, 129, 0.2);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.5);
+        background-color: rgba(224, 224, 224, 0.15);
+        color: #e0e0e0;
+        border: 1px solid rgba(224, 224, 224, 0.4);
     }
     
     /* Sidebar */
     [data-testid="stSidebar"] {
-        background-color: #1e293b;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        background-color: #121212;
+        border-right: 1px solid #222222;
+    }
+    
+    /* Custom divider */
+    hr {
+        border-color: #222222 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -191,20 +198,20 @@ if df is not None:
         with chart_col1:
             # Risk Distribution Chart
             fig, ax = plt.subplots(figsize=(6, 3))
-            fig.patch.set_facecolor('#0f172a')
-            ax.set_facecolor('#1e293b')
+            fig.patch.set_facecolor('#000000')
+            ax.set_facecolor('#121212')
             
             risk_counts = df["risk_rating"].value_counts().reindex(["Low", "Medium", "High"])
-            colors = ["#10b981", "#f59e0b", "#ef4444"]
+            colors = ["#b0bec5", "#f5a623", "#d32f2f"]
             
             bars = ax.bar(risk_counts.index, risk_counts.values, color=colors, edgecolor=(1.0, 1.0, 1.0, 0.1), width=0.5)
-            ax.tick_params(colors='#f1f5f9')
-            ax.spines['bottom'].set_color('#94a3b8')
-            ax.spines['left'].set_color('#94a3b8')
+            ax.tick_params(colors='#e0e0e0')
+            ax.spines['bottom'].set_color('#333333')
+            ax.spines['left'].set_color('#333333')
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
-            ax.set_ylabel("Number of Companies", color="#f1f5f9")
-            ax.set_title("Scoring Count by Risk Tier", color="#38bdf8", fontsize=12)
+            ax.set_ylabel("Number of Companies", color="#e0e0e0")
+            ax.set_title("Scoring Count by Risk Tier", color="#ffffff", fontsize=12)
             
             # Label bars
             for bar in bars:
@@ -213,7 +220,7 @@ if df is not None:
                             xy=(bar.get_x() + bar.get_width() / 2, height),
                             xytext=(0, 3),  # 3 points vertical offset
                             textcoords="offset points",
-                            ha='center', va='bottom', color='#f1f5f9', fontweight='bold')
+                            ha='center', va='bottom', color='#e0e0e0', fontweight='bold')
                             
             plt.tight_layout()
             st.pyplot(fig)
@@ -222,19 +229,19 @@ if df is not None:
         with chart_col2:
             # Default Probability Boxplot
             fig, ax = plt.subplots(figsize=(6, 3))
-            fig.patch.set_facecolor('#0f172a')
-            ax.set_facecolor('#1e293b')
+            fig.patch.set_facecolor('#000000')
+            ax.set_facecolor('#121212')
             
-            sns.boxplot(x=df["predicted_default_probability"], color="#38bdf8", ax=ax)
-            ax.axvline(x=0.0982, color='#ef4444', linestyle='--', label="Threshold (0.0982)")
-            ax.tick_params(colors='#f1f5f9')
-            ax.spines['bottom'].set_color('#94a3b8')
+            sns.boxplot(x=df["predicted_default_probability"], color="#b0bec5", ax=ax)
+            ax.axvline(x=0.0982, color='#d32f2f', linestyle='--', label="Threshold (0.0982)")
+            ax.tick_params(colors='#e0e0e0')
+            ax.spines['bottom'].set_color('#333333')
             ax.spines['left'].set_visible(False)
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
-            ax.set_xlabel("Predicted Default Probability", color="#f1f5f9")
-            ax.set_title("Spread of Default Probabilities", color="#38bdf8", fontsize=12)
-            ax.legend(facecolor='#1e293b', edgecolor='none', labelcolor='#f1f5f9')
+            ax.set_xlabel("Predicted Default Probability", color="#e0e0e0")
+            ax.set_title("Spread of Default Probabilities", color="#ffffff", fontsize=12)
+            ax.legend(facecolor='#121212', edgecolor='none', labelcolor='#e0e0e0')
             
             plt.tight_layout()
             st.pyplot(fig)
@@ -519,20 +526,20 @@ if df is not None:
                 
             # Plot
             fig, ax = plt.subplots(figsize=(8, 4))
-            fig.patch.set_facecolor('#0f172a')
-            ax.set_facecolor('#1e293b')
+            fig.patch.set_facecolor('#000000')
+            ax.set_facecolor('#121212')
             
-            colors = ['#ef4444' if v > 0 else '#38bdf8' for v in plot_vals]
+            colors = ['#d32f2f' if v > 0 else '#b0bec5' for v in plot_vals]
             
             bars = ax.barh(plot_names[::-1], plot_vals[::-1], color=colors[::-1], height=0.5, edgecolor=(1.0, 1.0, 1.0, 0.05))
             ax.axvline(x=0, color='grey', linestyle='--', linewidth=0.8)
-            ax.tick_params(colors='#f1f5f9', labelsize=9)
-            ax.spines['bottom'].set_color('#94a3b8')
-            ax.spines['left'].set_color('#94a3b8')
+            ax.tick_params(colors='#e0e0e0', labelsize=9)
+            ax.spines['bottom'].set_color('#333333')
+            ax.spines['left'].set_color('#333333')
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
-            ax.set_xlabel('SHAP Value (Contribution to Log-Odds of Default)', color="#f1f5f9", fontsize=9)
-            ax.set_title('Top 10 Decision Drivers (SHAP Explanation)', color="#38bdf8", fontsize=11, fontweight='bold')
+            ax.set_xlabel('SHAP Value (Contribution to Log-Odds of Default)', color="#e0e0e0", fontsize=9)
+            ax.set_title('Top 10 Decision Drivers (SHAP Explanation)', color="#ffffff", fontsize=11, fontweight='bold')
             
             plt.tight_layout()
             st.pyplot(fig)
