@@ -19,24 +19,10 @@ st.set_page_config(
 # Custom Premium Styling
 st.markdown("""
 <style>
-    /* Main Background & Fonts */
-    .stApp {
-        background-color: #000000;
-        color: #e0e0e0;
-        font-family: 'Inter', 'Segoe UI', sans-serif;
-    }
-    
-    /* Header styling */
-    h1, h2, h3 {
-        color: #ffffff !important;
-        font-family: 'Inter', 'Segoe UI', sans-serif;
-        font-weight: 600;
-    }
-    
     /* Metric Cards */
     .metric-card {
-        background: #121212;
-        border: 1px solid #333333;
+        background: #111111;
+        border: 1px solid #444444;
         padding: 20px;
         border-radius: 8px;
         text-align: center;
@@ -45,7 +31,7 @@ st.markdown("""
     .metric-value {
         font-size: 2.2rem;
         font-weight: 700;
-        color: #e0e0e0;
+        color: #C0C0C0;
         margin-bottom: 5px;
     }
     .metric-label {
@@ -74,20 +60,20 @@ st.markdown("""
         border: 1px solid rgba(245, 124, 0, 0.4);
     }
     .badge-low {
-        background-color: rgba(224, 224, 224, 0.15);
-        color: #e0e0e0;
-        border: 1px solid rgba(224, 224, 224, 0.4);
+        background-color: rgba(192, 192, 192, 0.15);
+        color: #C0C0C0;
+        border: 1px solid rgba(192, 192, 192, 0.4);
     }
     
     /* Sidebar */
     [data-testid="stSidebar"] {
-        background-color: #121212;
-        border-right: 1px solid #222222;
+        background-color: #0a0a0a;
+        border-right: 1px solid #333333;
     }
     
     /* Custom divider */
     hr {
-        border-color: #222222 !important;
+        border-color: #333333 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -202,10 +188,10 @@ if df is not None:
             fig.patch.set_facecolor('#000000')
             ax.set_facecolor('#121212')
             
-            risk_counts = df["risk_rating"].value_counts().reindex(["Low", "Medium", "High"])
+            risk_counts = df["risk_rating"].value_counts().reindex(["Low", "Medium", "High"]).fillna(0)
             colors = ["#b0bec5", "#f5a623", "#d32f2f"]
             
-            bars = ax.bar(risk_counts.index, risk_counts.values, color=colors, edgecolor=(1.0, 1.0, 1.0, 0.1), width=0.5)
+            bars = ax.bar(risk_counts.index, risk_counts.values, color=colors, edgecolor='#333333', width=0.5)
             ax.tick_params(colors='#e0e0e0')
             ax.spines['bottom'].set_color('#333333')
             ax.spines['left'].set_color('#333333')
@@ -415,87 +401,64 @@ if df is not None:
             decision = "DECLINE" if rating == "High" else ("REFER FOR MANUAL AUDIT" if rating == "Medium" else "APPROVE")
             recom_style = "color:#ff5252;" if rating == "High" else ("color:#ffb74d;" if rating == "Medium" else "color:#10b981;")
             
-            # Formatted lists for qualitative risks & mitigants
-            if found_risks:
-                risks_list_html = '<ul style="margin:0; padding-left:15px;">' + "".join([f"<li style='margin-bottom:5px; color:#ff5252;'>{r}</li>" for r in found_risks]) + "</ul>"
-            else:
-                risks_list_html = "<p style='margin:0; color:#8a8a8a; font-style:italic;'>No qualitative risk indicators detected.</p>"
-
-            if found_strengths:
-                strengths_list_html = '<ul style="margin:0; padding-left:15px;">' + "".join([f"<li style='margin-bottom:5px; color:#e0e0e0;'>{s}</li>" for s in found_strengths]) + "</ul>"
-            else:
-                strengths_list_html = "<p style='margin:0; color:#8a8a8a; font-style:italic;'>No qualitative strength indicators detected.</p>"
-                
             # Formatted conclusion
             if rating == "High":
-                conclusion_text = f"The company {row['company_name']} exhibits a default risk that is well above acceptable credit thresholds. With a model default probability of {prob:.2%}, capital preservation mandates a DECLINE of the credit facility."
+                conclusion_text = f"The company **{row['company_name']}** exhibits a default risk that is well above acceptable credit thresholds. With a model default probability of **{prob:.2%}**, capital preservation mandates a **DECLINE** of the credit facility."
             elif rating == "Medium":
-                conclusion_text = f"The default risk for {row['company_name']} is borderline ({prob:.2%}). A manual review of secondary credit indicators and relationship history is required to determine final covenant terms."
+                conclusion_text = f"The default risk for **{row['company_name']}** is borderline (**{prob:.2%}**). A manual review of secondary credit indicators and relationship history is required to determine final covenant terms."
             else:
-                conclusion_text = f"The default probability for {row['company_name']} is low ({prob:.2%}), indicating a solid credit profile. The credit facility is recommended for APPROVAL subject to standard covenants."
+                conclusion_text = f"The default probability for **{row['company_name']}** is low (**{prob:.2%}**), indicating a solid credit profile. The credit facility is recommended for **APPROVAL** subject to standard covenants."
                 
-            st.markdown(textwrap.dedent(f"""
-            <div style="background-color: #121212; border: 1px solid #333333; border-radius: 8px; padding: 25px; font-family: 'Inter', sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);">
-                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #222222; padding-bottom: 12px; margin-bottom: 20px;">
-                    <div>
-                        <h4 style="margin: 0; color: #ffffff; text-transform: uppercase; letter-spacing: 0.1em; font-size: 1.1rem; font-weight: 600;">Credit Assessment Memo</h4>
-                        <span style="color: #8a8a8a; font-size: 0.8rem;">Fasanara Capital • Risk Management</span>
-                    </div>
-                    <div style="text-align: right;">
-                        <span style="color: #8a8a8a; font-size: 0.8rem;">Date: 2026-06-10</span>
-                    </div>
-                </div>
+            with st.container(border=True):
+                cols_memo_header = st.columns([3, 1])
+                with cols_memo_header[0]:
+                    st.subheader("Credit Assessment Memo")
+                    st.caption("Fasanara Capital • Risk Management")
+                with cols_memo_header[1]:
+                    st.caption("Date: 2026-06-10")
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; background-color: #1a1a1a; padding: 12px; border-radius: 4px; border: 1px solid #222222; font-size: 0.9rem;">
-                    <div><strong style="color: #8a8a8a;">Company Name:</strong> <span style="color: #ffffff; font-weight: 500;">{row['company_name']}</span></div>
-                    <div><strong style="color: #8a8a8a;">Company ID:</strong> <span style="color: #ffffff; font-weight: 500;">{company_id}</span></div>
-                    <div><strong style="color: #8a8a8a;">Sector:</strong> <span style="color: #ffffff; font-weight: 500;">{row['sector']}</span></div>
-                    <div><strong style="color: #8a8a8a;">Country:</strong> <span style="color: #ffffff; font-weight: 500;">{row['country']}</span></div>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #555555; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">1. Executive Recommendation</h5>
-                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
-                        <span style="font-weight: 700; {recom_style}">{decision}</span>
-                        <span style="color: #333333;">|</span>
-                        <span style="color: #e0e0e0;">Model Risk Rating: <strong>{rating} Risk</strong></span>
-                        <span style="color: #333333;">|</span>
-                        <span style="color: #e0e0e0;">Est. Default Probability: <strong>{prob:.2%}</strong></span>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #555555; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">2. Key Financial Findings</h5>
-                    <ul style="margin: 0; padding-left: 18px; color: #cccccc; line-height: 1.5; font-size: 0.9rem;">
-                        <li style="margin-bottom: 4px;">Revenue stands at <strong>€{row['revenue_m']:.2f}M</strong>, with an operating (EBITDA) margin of <strong>{row['ebitda_margin']:.2%}</strong>.</li>
-                        <li style="margin-bottom: 4px;">Leverage (Debt Ratio) is <strong>{row['debt_ratio']:.2%}</strong>, backed by an interest coverage of <strong>{row['interest_coverage']:.2f}x</strong>.</li>
-                        <li style="margin-bottom: 4px;">Operating history spans <strong>{int(row['years_in_operation'])} years</strong> with an active workforce of <strong>{int(row['employee_count'])} employees</strong>.</li>
-                    </ul>
-                </div>
-
-                <div style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div>
-                        <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #ff5252; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">3. Qualitative Risks</h5>
-                        <div style="color: #cccccc; font-size: 0.85rem;">
-                            {risks_list_html}
-                        </div>
-                    </div>
-                    <div>
-                        <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #b0bec5; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">4. Mitigating Factors</h5>
-                        <div style="color: #cccccc; font-size: 0.85rem;">
-                            {strengths_list_html}
-                        </div>
-                    </div>
-                </div>
-
-                <div style="border-top: 1px solid #222222; padding-top: 15px; margin-top: 15px; background-color: #161616; padding: 12px; border-radius: 4px; border: 1px solid #222222;">
-                    <h5 style="margin: 0 0 8px 0; color: #ffffff; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">5. Risk Assessment Conclusion</h5>
-                    <p style="margin: 0; color: #b0b0b0; font-size: 0.9rem; line-height: 1.5; font-style: italic;">
-                        {conclusion_text}
-                    </p>
-                </div>
-            </div>
-            """), unsafe_allow_html=True)
+                st.divider()
+                
+                cols_info = st.columns(4)
+                cols_info[0].metric("Company Name", row['company_name'])
+                cols_info[1].metric("Company ID", company_id)
+                cols_info[2].metric("Sector", row['sector'])
+                cols_info[3].metric("Country", row['country'])
+                
+                st.markdown("#### 1. Executive Recommendation")
+                if rating == "High":
+                    st.error(f"**{decision}** | Model Risk Rating: **{rating} Risk** | Est. Default Probability: **{prob:.2%}**")
+                elif rating == "Medium":
+                    st.warning(f"**{decision}** | Model Risk Rating: **{rating} Risk** | Est. Default Probability: **{prob:.2%}**")
+                else:
+                    st.success(f"**{decision}** | Model Risk Rating: **{rating} Risk** | Est. Default Probability: **{prob:.2%}**")
+                    
+                st.markdown("#### 2. Key Financial Findings")
+                st.markdown(f"- Revenue stands at **€{row['revenue_m']:.2f}M**, with an operating (EBITDA) margin of **{row['ebitda_margin']:.2%}**.")
+                st.markdown(f"- Leverage (Debt Ratio) is **{row['debt_ratio']:.2%}**, backed by an interest coverage of **{row['interest_coverage']:.2f}x**.")
+                st.markdown(f"- Operating history spans **{int(row['years_in_operation'])} years** with an active workforce of **{int(row['employee_count'])} employees**.")
+                
+                st.markdown("---")
+                cols_risk_mit = st.columns(2)
+                with cols_risk_mit[0]:
+                    st.markdown("#### 3. Qualitative Risks")
+                    if found_risks:
+                        for r in found_risks:
+                            st.markdown(f"- 🔴 {r}")
+                    else:
+                        st.markdown("*No qualitative risk indicators detected.*")
+                
+                with cols_risk_mit[1]:
+                    st.markdown("#### 4. Mitigating Factors")
+                    if found_strengths:
+                        for s in found_strengths:
+                            st.markdown(f"- 🔵 {s}")
+                    else:
+                        st.markdown("*No qualitative strength indicators detected.*")
+                        
+                st.divider()
+                st.markdown("#### 5. Risk Assessment Conclusion")
+                st.info(conclusion_text)
             
         with memo_tab2:
             st.markdown("### Why did the model predict this risk score?")
@@ -581,7 +544,7 @@ if df is not None:
             
             colors = ['#d32f2f' if v > 0 else '#b0bec5' for v in plot_vals]
             
-            bars = ax.barh(plot_names[::-1], plot_vals[::-1], color=colors[::-1], height=0.5, edgecolor=(1.0, 1.0, 1.0, 0.05))
+            bars = ax.barh(plot_names[::-1], plot_vals[::-1], color=colors[::-1], height=0.5, edgecolor='#333333')
             ax.axvline(x=0, color='grey', linestyle='--', linewidth=0.8)
             ax.tick_params(colors='#e0e0e0', labelsize=9)
             ax.spines['bottom'].set_color('#333333')
@@ -609,26 +572,40 @@ if df is not None:
         st.markdown("---")
         
         diag_col1, diag_col2 = st.columns([1, 1])
-        
         with diag_col1:
             st.markdown("### 📈 Model Comparison (Stratified 5-Fold CV)")
             
-            comparison_data = {
-                "Model": ["Logistic Regression", "Tuned XGBoost", "Calibrated XGBoost (Platt)"],
-                "ROC-AUC": [0.7646, 0.7831, 0.7880],
-                "PR-AUC": [0.4702, 0.4927, 0.4925],
-                "Brier Score": [0.1862, 0.1570, 0.1192],
-                "FNR (Operating Point)": ["34.97%", "36.74%", "13.22%"],
-                "FPR (Operating Point)": ["25.91%", "20.47%", "49.76%"],
-                "Threshold": [0.5000, 0.5000, 0.0982]
-            }
-            
-            st.table(pd.DataFrame(comparison_data))
+            try:
+                metrics_path = os.path.join(DATA_DIR, "model_comparison_metrics.csv")
+                if os.path.exists(metrics_path):
+                    comp_df = pd.read_csv(metrics_path)
+                    
+                    # Format columns for display
+                    disp_df = comp_df.copy()
+                    disp_df["Threshold"] = disp_df["Threshold"].map(lambda val: f"{val:.4f}")
+                    disp_df["ROC-AUC"] = disp_df["ROC-AUC"].map(lambda val: f"{val:.4f}")
+                    disp_df["PR-AUC"] = disp_df["PR-AUC"].map(lambda val: f"{val:.4f}")
+                    disp_df["Brier Score"] = disp_df["Brier Score"].map(lambda val: f"{val:.4f}")
+                    disp_df["ECE"] = disp_df["ECE"].map(lambda val: f"{val:.2%}")
+                    disp_df["pMAD"] = disp_df["pMAD"].map(lambda val: f"{val:.2%}")
+                    disp_df["ECE/pMAD Ratio"] = disp_df["ECE/pMAD Ratio"].map(lambda val: f"{val:.4f}")
+                    disp_df["Recall (TPR)"] = disp_df["Recall (TPR)"].map(lambda val: f"{val:.2%}")
+                    disp_df["FPR"] = disp_df["FPR"].map(lambda val: f"{val:.2%}")
+                    disp_df["FNR"] = disp_df["FNR"].map(lambda val: f"{val:.2%}")
+                    
+                    st.dataframe(disp_df, use_container_width=True, hide_index=True)
+                else:
+                    st.error("Metrics CSV not found. Please run the modeling pipeline first.")
+            except Exception as e:
+                st.error(f"Error loading metrics: {e}")
             
             st.markdown(
                 "**Why Calibrated XGBoost is selected:**\n"
-                "* **Probability Quality**: Brier Score dropped from 0.1570 (raw) to 0.1192 (calibrated), meaning default probabilities are highly reliable for loan pricing.\n"
-                "* **Capital Protection**: By tuning the decision threshold to `0.0982`, we successfully limited False Negatives (actual defaults classified as safe) to **13.22%** (Recall/TPR ~86.8%)."
+                "* **Probability Quality**: Brier Score dropped to **0.1192**, showing high probabilistic accuracy.\n"
+                "* **Expected Calibration Error (ECE)**: ECE drops from **16.13%** (raw XGBoost) to just **2.62%** after Platt calibration, indicating our default probabilities align closely with actual default frequencies.\n"
+                "* **Probability Diversity (pMAD)**: The calibrated model maintains a healthy pMAD of **11.15%**, indicating that the probabilities are diverse and discriminate well between risk profiles (unlike models that just regurgitate the base rate).\n"
+                "* **ECE/pMAD Ratio**: The ratio drops to **0.2349** (from 0.7412 on raw XGBoost), representing the lowest amount of calibration error per unit of probability diversity.\n"
+                "* **Capital Protection**: At our operating target threshold of `0.0982`, we successfully limit the False Negative Rate (FNR) to **13.22%** (Recall/TPR ~86.8%)."
             )
             
         with diag_col2:

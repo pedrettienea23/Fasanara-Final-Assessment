@@ -107,6 +107,25 @@ def evaluate_predictions(y_true, y_prob, threshold=0.5):
     # Calculate Brier score for probability quality check
     brier_score = brier_score_loss(y_true, y_prob)
 
+    # Calculate Expected Calibration Error (ECE) and Probability MAD (pMAD)
+    y_true_arr = np.asarray(y_true)
+    y_prob_arr = np.asarray(y_prob)
+    pmad = np.mean(np.abs(y_prob_arr - np.mean(y_prob_arr)))
+    
+    bin_boundaries = np.linspace(0, 1, 11)
+    ece = 0.0
+    for i in range(10):
+        bin_lower = bin_boundaries[i]
+        bin_upper = bin_boundaries[i+1]
+        in_bin = (y_prob_arr >= bin_lower) & (y_prob_arr < bin_upper) if i < 9 else (y_prob_arr >= bin_lower) & (y_prob_arr <= bin_upper)
+        prop_in_bin = np.mean(in_bin)
+        if prop_in_bin > 0:
+            accuracy_in_bin = np.mean(y_true_arr[in_bin])
+            avg_confidence_in_bin = np.mean(y_prob_arr[in_bin])
+            ece += prop_in_bin * np.abs(avg_confidence_in_bin - accuracy_in_bin)
+            
+    ratio = ece / pmad if pmad > 0 else 0.0
+
     return {
         "roc_auc": roc_auc,
         "pr_auc": pr_auc,
@@ -115,7 +134,10 @@ def evaluate_predictions(y_true, y_prob, threshold=0.5):
         "recall": rec,
         "fpr": fpr,
         "fnr": fnr,
-        "brier_score": brier_score
+        "brier_score": brier_score,
+        "ece": ece,
+        "pmad": pmad,
+        "ece_pmad_ratio": ratio
     }
 
 
@@ -307,27 +329,68 @@ plt.tight_layout()
 plt.savefig(os.path.join(DATA_DIR, "calibration_curve.png"), dpi=150)
 plt.close()
 
-brier_cal = brier_score_loss(y, oof_probs_calibrated)
-print(f"Calibrated XGBoost Brier Score Loss: {brier_cal:.4f}")
-
+# Calculate baseline LR and raw XGB metrics at 0.5 threshold
+lr_metrics = evaluate_predictions(y, oof_probs_lr, threshold=0.5)
+xgb_metrics = evaluate_predictions(y, oof_probs_xgb, threshold=0.5)
 
 # Find the optimal threshold based on Calibrated Probabilities to achieve a target FNR ≈ 13.2% (Recall ≈ 86.8%)
 precision, recall, thresholds = precision_recall_curve(y, oof_probs_calibrated)
-
 target_recall = 0.8678
 best_idx = np.argmin(np.abs(recall[:-1] - target_recall))
 optimal_threshold = thresholds[best_idx]
 
-# Calculate metrics at this threshold
-y_pred_opt = (oof_probs_calibrated >= optimal_threshold).astype(int)
-opt_f1 = f1_score(y, y_pred_opt)
-opt_rec = recall_score(y, y_pred_opt)
-opt_prec = precision_score(y, y_pred_opt, zero_division=0)
-tn, fp, fn, tp = confusion_matrix(y, y_pred_opt).ravel()
-opt_fpr = fp / (fp + tn)
+# Evaluate Calibrated XGBoost at the optimal threshold
+cal_metrics = evaluate_predictions(y, oof_probs_calibrated, threshold=optimal_threshold)
 
-print(f"Optimal Threshold for FNR ~ 13.2%: {optimal_threshold:.4f}")
-print(f"At this threshold -> Recall (TPR): {opt_rec:.2%}, FNR: {1-opt_rec:.2%}, FPR: {opt_fpr:.2%}, F1: {opt_f1:.2%}")
+# Display model performance comparison including ECE, pMAD, and ECE/pMAD ratio
+print("\n=== Model Performance comparison at Target FNR ~ 13.2% ===")
+metrics_df = pd.DataFrame([
+    {
+        "Model": "Logistic Regression",
+        "Threshold": 0.5,
+        "ROC-AUC": lr_metrics["roc_auc"],
+        "PR-AUC": lr_metrics["pr_auc"],
+        "Brier Score": lr_metrics["brier_score"],
+        "ECE": lr_metrics["ece"],
+        "pMAD": lr_metrics["pmad"],
+        "ECE/pMAD Ratio": lr_metrics["ece_pmad_ratio"],
+        "Recall (TPR)": lr_metrics["recall"],
+        "FPR": lr_metrics["fpr"],
+        "FNR": lr_metrics["fnr"]
+    },
+    {
+        "Model": "Tuned XGBoost",
+        "Threshold": 0.5,
+        "ROC-AUC": xgb_metrics["roc_auc"],
+        "PR-AUC": xgb_metrics["pr_auc"],
+        "Brier Score": xgb_metrics["brier_score"],
+        "ECE": xgb_metrics["ece"],
+        "pMAD": xgb_metrics["pmad"],
+        "ECE/pMAD Ratio": xgb_metrics["ece_pmad_ratio"],
+        "Recall (TPR)": xgb_metrics["recall"],
+        "FPR": xgb_metrics["fpr"],
+        "FNR": xgb_metrics["fnr"]
+    },
+    {
+        "Model": "Calibrated XGBoost (Platt)",
+        "Threshold": optimal_threshold,
+        "ROC-AUC": cal_metrics["roc_auc"],
+        "PR-AUC": cal_metrics["pr_auc"],
+        "Brier Score": cal_metrics["brier_score"],
+        "ECE": cal_metrics["ece"],
+        "pMAD": cal_metrics["pmad"],
+        "ECE/pMAD Ratio": cal_metrics["ece_pmad_ratio"],
+        "Recall (TPR)": cal_metrics["recall"],
+        "FPR": cal_metrics["fpr"],
+        "FNR": cal_metrics["fnr"]
+    }
+])
+print(metrics_df.to_string(index=False))
+
+# Save comparison metrics
+metrics_df.to_csv(os.path.join(DATA_DIR, "model_comparison_metrics.csv"), index=False)
+print("Saved model_comparison_metrics.csv to data/processed/")
+
 
 # Define Risk Tiers based on probabilities
 def assign_risk_rating(prob, opt_threshold):
