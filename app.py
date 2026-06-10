@@ -6,6 +6,7 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import brier_score_loss
+import textwrap
 
 # Set Page Config
 st.set_page_config(
@@ -433,7 +434,7 @@ if df is not None:
             else:
                 conclusion_text = f"The default probability for {row['company_name']} is low ({prob:.2%}), indicating a solid credit profile. The credit facility is recommended for APPROVAL subject to standard covenants."
                 
-            st.markdown(f"""
+            st.markdown(textwrap.dedent(f"""
             <div style="background-color: #121212; border: 1px solid #333333; border-radius: 8px; padding: 25px; font-family: 'Inter', sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);">
                 <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #222222; padding-bottom: 12px; margin-bottom: 20px;">
                     <div>
@@ -494,7 +495,7 @@ if df is not None:
                     </p>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
             
         with memo_tab2:
             st.markdown("### Why did the model predict this risk score?")
