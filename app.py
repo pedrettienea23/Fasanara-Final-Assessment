@@ -197,7 +197,7 @@ if df is not None:
             risk_counts = df["risk_rating"].value_counts().reindex(["Low", "Medium", "High"])
             colors = ["#10b981", "#f59e0b", "#ef4444"]
             
-            bars = ax.bar(risk_counts.index, risk_counts.values, color=colors, edgecolor='rgba(255,255,255,0.1)', width=0.5)
+            bars = ax.bar(risk_counts.index, risk_counts.values, color=colors, edgecolor=(1.0, 1.0, 1.0, 0.1), width=0.5)
             ax.tick_params(colors='#f1f5f9')
             ax.spines['bottom'].set_color('#94a3b8')
             ax.spines['left'].set_color('#94a3b8')
@@ -524,7 +524,7 @@ if df is not None:
             
             colors = ['#ef4444' if v > 0 else '#38bdf8' for v in plot_vals]
             
-            bars = ax.barh(plot_names[::-1], plot_vals[::-1], color=colors[::-1], height=0.5, edgecolor='rgba(255,255,255,0.05)')
+            bars = ax.barh(plot_names[::-1], plot_vals[::-1], color=colors[::-1], height=0.5, edgecolor=(1.0, 1.0, 1.0, 0.05))
             ax.axvline(x=0, color='grey', linestyle='--', linewidth=0.8)
             ax.tick_params(colors='#f1f5f9', labelsize=9)
             ax.spines['bottom'].set_color('#94a3b8')
