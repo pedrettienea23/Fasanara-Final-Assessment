@@ -410,41 +410,90 @@ if df is not None:
             st.markdown("---")
             st.markdown("### 📝 Structured Credit Memo (Analyst Recommendation)")
             
-            # Recommendation memo text
+            # Recommendation memo variables
             decision = "DECLINE" if rating == "High" else ("REFER FOR MANUAL AUDIT" if rating == "Medium" else "APPROVE")
-            recom_style = "color:#ef4444;" if rating == "High" else ("color:#f59e0b;" if rating == "Medium" else "color:#10b981;")
+            recom_style = "color:#ff5252;" if rating == "High" else ("color:#ffb74d;" if rating == "Medium" else "color:#10b981;")
             
+            # Formatted lists for qualitative risks & mitigants
+            if found_risks:
+                risks_list_html = '<ul style="margin:0; padding-left:15px;">' + "".join([f"<li style='margin-bottom:5px; color:#ff5252;'>{r}</li>" for r in found_risks]) + "</ul>"
+            else:
+                risks_list_html = "<p style='margin:0; color:#8a8a8a; font-style:italic;'>No qualitative risk indicators detected.</p>"
+
+            if found_strengths:
+                strengths_list_html = '<ul style="margin:0; padding-left:15px;">' + "".join([f"<li style='margin-bottom:5px; color:#e0e0e0;'>{s}</li>" for s in found_strengths]) + "</ul>"
+            else:
+                strengths_list_html = "<p style='margin:0; color:#8a8a8a; font-style:italic;'>No qualitative strength indicators detected.</p>"
+                
+            # Formatted conclusion
+            if rating == "High":
+                conclusion_text = f"The company {row['company_name']} exhibits a default risk that is well above acceptable credit thresholds. With a model default probability of {prob:.2%}, capital preservation mandates a DECLINE of the credit facility."
+            elif rating == "Medium":
+                conclusion_text = f"The default risk for {row['company_name']} is borderline ({prob:.2%}). A manual review of secondary credit indicators and relationship history is required to determine final covenant terms."
+            else:
+                conclusion_text = f"The default probability for {row['company_name']} is low ({prob:.2%}), indicating a solid credit profile. The credit facility is recommended for APPROVAL subject to standard covenants."
+                
             st.markdown(f"""
-            ```text
-            FASANARA CREDIT ASSESSMENT MEMO
-            ==================================================
-            COMPANY NAME: {row['company_name']}
-            COMPANY ID  : {company_id}
-            DATE        : 2026-06-10
-            
-            1. EXECUTIVE RECOMMENDATION
-            ---------------------------
-            PROPOSAL    : {decision}
-            MODEL RATING: {rating} Risk
-            EST. DEFAULT PROBABILITY: {prob:.2%} (Decision threshold: 9.82%)
-            
-            2. KEY FINANCIAL FINDINGS
-            -------------------------
-            * Revenue stands at €{row['revenue_m']:.2f}M, with operating (EBITDA) margin of {row['ebitda_margin']:.2%}.
-            * Leverage (Debt Ratio) is {row['debt_ratio']:.2%}, backed by interest coverage of {row['interest_coverage']:.2f}x.
-            * Years in operation: {int(row['years_in_operation'])} years.
-            
-            3. RISK & MITIGATING FACTORS SUMMARY
-            -------------------------------------
-            * Qualitative Risks: {", ".join(found_risks) if found_risks else "None detected"}
-            * Qualitative Mitigants: {", ".join(found_strengths) if found_strengths else "None detected"}
-            
-            4. CONCLUSION
-            -------------
-            {row['company_name']} exhibits a default risk that is {'above' if rating in ("High", "Medium") else 'well within'} acceptable thresholds. 
-            {"The company represents high default risk; capital reservation mandates a DECLINE of the credit facility." if rating == "High" else ("The default risk is borderline. MANUAL REVIEW is required to evaluate mitigants." if rating == "Medium" else "The credit request is approved subject to standard covenants.")}
-            ==================================================
-            ```
+            <div style="background-color: #121212; border: 1px solid #333333; border-radius: 8px; padding: 25px; font-family: 'Inter', sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);">
+                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #222222; padding-bottom: 12px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="margin: 0; color: #ffffff; text-transform: uppercase; letter-spacing: 0.1em; font-size: 1.1rem; font-weight: 600;">Credit Assessment Memo</h4>
+                        <span style="color: #8a8a8a; font-size: 0.8rem;">Fasanara Capital • Risk Management</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="color: #8a8a8a; font-size: 0.8rem;">Date: 2026-06-10</span>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; background-color: #1a1a1a; padding: 12px; border-radius: 4px; border: 1px solid #222222; font-size: 0.9rem;">
+                    <div><strong style="color: #8a8a8a;">Company Name:</strong> <span style="color: #ffffff; font-weight: 500;">{row['company_name']}</span></div>
+                    <div><strong style="color: #8a8a8a;">Company ID:</strong> <span style="color: #ffffff; font-weight: 500;">{company_id}</span></div>
+                    <div><strong style="color: #8a8a8a;">Sector:</strong> <span style="color: #ffffff; font-weight: 500;">{row['sector']}</span></div>
+                    <div><strong style="color: #8a8a8a;">Country:</strong> <span style="color: #ffffff; font-weight: 500;">{row['country']}</span></div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #555555; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">1. Executive Recommendation</h5>
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
+                        <span style="font-weight: 700; {recom_style}">{decision}</span>
+                        <span style="color: #333333;">|</span>
+                        <span style="color: #e0e0e0;">Model Risk Rating: <strong>{rating} Risk</strong></span>
+                        <span style="color: #333333;">|</span>
+                        <span style="color: #e0e0e0;">Est. Default Probability: <strong>{prob:.2%}</strong></span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #555555; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">2. Key Financial Findings</h5>
+                    <ul style="margin: 0; padding-left: 18px; color: #cccccc; line-height: 1.5; font-size: 0.9rem;">
+                        <li style="margin-bottom: 4px;">Revenue stands at <strong>€{row['revenue_m']:.2f}M</strong>, with an operating (EBITDA) margin of <strong>{row['ebitda_margin']:.2%}</strong>.</li>
+                        <li style="margin-bottom: 4px;">Leverage (Debt Ratio) is <strong>{row['debt_ratio']:.2%}</strong>, backed by an interest coverage of <strong>{row['interest_coverage']:.2f}x</strong>.</li>
+                        <li style="margin-bottom: 4px;">Operating history spans <strong>{int(row['years_in_operation'])} years</strong> with an active workforce of <strong>{int(row['employee_count'])} employees</strong>.</li>
+                    </ul>
+                </div>
+
+                <div style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #ff5252; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">3. Qualitative Risks</h5>
+                        <div style="color: #cccccc; font-size: 0.85rem;">
+                            {risks_list_html}
+                        </div>
+                    </div>
+                    <div>
+                        <h5 style="margin: 0 0 10px 0; color: #ffffff; border-left: 3px solid #b0bec5; padding-left: 8px; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">4. Mitigating Factors</h5>
+                        <div style="color: #cccccc; font-size: 0.85rem;">
+                            {strengths_list_html}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #222222; padding-top: 15px; margin-top: 15px; background-color: #161616; padding: 12px; border-radius: 4px; border: 1px solid #222222;">
+                    <h5 style="margin: 0 0 8px 0; color: #ffffff; font-size: 0.95rem; text-transform: uppercase; font-weight: 600;">5. Risk Assessment Conclusion</h5>
+                    <p style="margin: 0; color: #b0b0b0; font-size: 0.9rem; line-height: 1.5; font-style: italic;">
+                        {conclusion_text}
+                    </p>
+                </div>
+            </div>
             """, unsafe_allow_html=True)
             
         with memo_tab2:
