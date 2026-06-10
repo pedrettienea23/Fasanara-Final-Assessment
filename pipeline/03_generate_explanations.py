@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file if present
 load_dotenv()
 
+# Set to True to generate explanations via LLM APIs or local templates
+GENERATE_EXPLANATIONS = False
+
 # Define paths
 PROCESSED_DIR = "data/processed"
 OUTPUT_DIR = "outputs"
@@ -214,7 +217,10 @@ for idx, row in predictions_raw.iterrows():
     pos_drivers, neg_drivers = get_top_shap_drivers(scoring_idx)
     
     # Generate explanation
-    explanation = generate_llm_explanation(company_name, prob, risk_rating, pos_drivers, neg_drivers, desc)
+    if GENERATE_EXPLANATIONS:
+        explanation = generate_llm_explanation(company_name, prob, risk_rating, pos_drivers, neg_drivers, desc)
+    else:
+        explanation = ""
     
     final_rows.append({
         "company_id": company_id,

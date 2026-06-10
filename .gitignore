@@ -7,5 +7,6 @@ venv/
 .DS_Store
 outputs/*.csv
 !outputs/.gitkeep
+!outputs/predictions.csv
 data/processed/
 *.pkl

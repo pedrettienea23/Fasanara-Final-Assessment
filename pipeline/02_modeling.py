@@ -345,24 +345,29 @@ print(f"Calibrated XGBoost Brier Score Loss: {brier_cal:.4f}")
 # In[10]:
 
 
-# Find the optimal threshold based on Calibrated Probabilities to maximize F1-score
+# Find the optimal threshold based on Calibrated Probabilities to achieve a target FNR ≈ 13.2% (Recall ≈ 86.8%)
 precision, recall, thresholds = precision_recall_curve(y, oof_probs_calibrated)
 
-# Remove the last threshold element (which is always 1)
-thresholds_arr = thresholds
-f1_scores = [2 * (p * r) / (p + r) if (p + r) > 0 else 0 for p, r in zip(precision[:-1], recall[:-1])]
+target_recall = 0.8678
+best_idx = np.argmin(np.abs(recall[:-1] - target_recall))
+optimal_threshold = thresholds[best_idx]
 
-best_idx = np.argmax(f1_scores)
-optimal_threshold = thresholds_arr[best_idx]
-best_f1 = f1_scores[best_idx]
+# Calculate metrics at this threshold
+y_pred_opt = (oof_probs_calibrated >= optimal_threshold).astype(int)
+opt_f1 = f1_score(y, y_pred_opt)
+opt_rec = recall_score(y, y_pred_opt)
+opt_prec = precision_score(y, y_pred_opt, zero_division=0)
+tn, fp, fn, tp = confusion_matrix(y, y_pred_opt).ravel()
+opt_fpr = fp / (fp + tn)
 
-print(f"Optimal Threshold to maximize F1: {optimal_threshold:.4f} (Max F1: {best_f1:.4f})")
+print(f"Optimal Threshold for FNR ~ 13.2%: {optimal_threshold:.4f}")
+print(f"At this threshold -> Recall (TPR): {opt_rec:.2%}, FNR: {1-opt_rec:.2%}, FPR: {opt_fpr:.2%}, F1: {opt_f1:.2%}")
 
 # Define Risk Tiers based on probabilities
 def assign_risk_rating(prob, opt_threshold):
-    # Low risk: Less than half the optimal threshold
-    # High risk: Greater than or equal to the optimal threshold
-    # Medium risk: In between
+    # Low risk: Less than half the optimal threshold (p < 0.05)
+    # High risk: Greater than or equal to the optimal threshold (p >= 0.10)
+    # Medium risk: In between (0.05 <= p < 0.10)
     if prob < (opt_threshold / 2):
         return "Low"
     elif prob < opt_threshold:
